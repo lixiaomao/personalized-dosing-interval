@@ -1,7 +1,7 @@
 #' Conduct cross-validation for dose interval
 #'
 #' This function is the wrapper of cross-validation for doseInt
-#' 
+#'
 #' @param train the training data set.
 #' @param test the testing data set. If test is NULL, use train as test.
 #' @param pred0 the initial prediction for training data set, if NULL, default initialization is used
@@ -23,11 +23,36 @@
 #' @param Lambda candidate penalties for the quantile regression
 #' @param Cost candidate costs for the support vector machine
 #' @param Embed.mtry candidate proportions of mtry
-#'    
+#'
 #' @examples
-#' 
-#' 
-#' 
+#' train1=Scenario1.continuous(2000,5,1)
+#' test1=Scenario1.continuous(10000,5,1)
+#'
+#' cv1=cv.doseInt(train1,test1,pred0=NULL,nfolds=2,alpha=c(0.5,0.5),type='PDI',two.sided=FALSE,
+#'                family='continuous',
+#'                method='svmLinear',
+#'                maxiter=20,step=1,trace=0,lower=TRUE,Lambda = 2^(-(1:5)),Cost=c(1,7,12,19))
+#' pred1=predict(cv1$fit,test1)
+#'
+#' train2=Scenario2.continuous(2000,6,2)
+#' test2=Scenario2.continuous(10000,6,2)
+#'
+#' cv2=cv.doseInt(train2,test2,pred0=NULL,nfolds=2,alpha=c(0.5,0.5),type='PDI',two.sided=FALSE,
+#'                family='as.ordinal',
+#'                method='svmLinear',K=20,
+#'                maxiter=2,step=1,trace=3,lower=TRUE,Lambda = 2^(-(1:5)),Cost=c(0.0001,0.001,0.01,0.01,0.05,0.1,0.5,1))
+#' pred2=predict(cv2$fit,test2)
+#'
+#'
+#' train4=Scenario4.continuous(2000,5,4)
+#' test4=Scenario4.continuous(10000,5,4)
+#'
+#' cv4=cv.doseInt(train4,test4,pred0=NULL,nfolds=2,alpha=c(0.5,0.5),type='PDI',two.sided=TRUE,
+#'                family='as.ordinal',
+#'                method='svmLinear',K=20,
+#'               maxiter=2,step=1,trace=3,lower=TRUE,Lambda = 2^(-(1:5)),Cost=c(0.0001,0.001,0.01,0.01,0.05,0.1,0.5,1))
+#' pred4=predict(cv4$fit,test4)
+
 
 cv.doseInt<-function(train,test=NULL,pred0=NULL,nfolds=5,alpha=c(0.5,0.5),type='PDI',two.sided=FALSE,
                      family=c('continuous','ordinal','as.ordinal'),
@@ -42,13 +67,13 @@ cv.doseInt<-function(train,test=NULL,pred0=NULL,nfolds=5,alpha=c(0.5,0.5),type='
   n=length(train$A)
   p=dim(train$X)[2]
   nsize=n/nfolds
-  
+
   Eps=0.1
   grid.cv = switch(method,'rq'=expand.grid(Eps = Eps, Lambda = Lambda),
                    'svmLinear'=expand.grid(Eps = Eps, Cost = Cost),
                    'svmRadial'=expand.grid(Eps = Eps, Cost = Cost),
                    'RLT'=expand.grid(Eps = Eps, Embed.mtry = Embed.mtry))
-  
+
   Rec=rep(0,nrow(grid.cv))
   i=1;k=1
   for(i in 1:nfolds){
@@ -75,7 +100,7 @@ cv.doseInt<-function(train,test=NULL,pred0=NULL,nfolds=5,alpha=c(0.5,0.5),type='
   id=which.min(Rec$Misclass)
   print(Rec[id,])
   misclass_min=Rec$Misclass[id]
-  
+
   # independent test
   fit=doseInt(train=train,
               alpha=alpha,type=type,
@@ -88,7 +113,7 @@ cv.doseInt<-function(train,test=NULL,pred0=NULL,nfolds=5,alpha=c(0.5,0.5),type='
   misclass=tmp$misclass
   region=tmp$region
   percentage=sum(region*(test$Y>test$S))/sum(region)
-  
+
   output=list(misclass_min=misclass_min,misclass=misclass,fit=fit,Rec=Rec,bestPara=Rec[id,3],percentage=percentage)
   if(!two.sided){
     output$pred=tmp$pred
@@ -102,7 +127,7 @@ cv.doseInt<-function(train,test=NULL,pred0=NULL,nfolds=5,alpha=c(0.5,0.5),type='
         output$correlation=cor(output$value,test$opt)
       }
     }
-    
+
   } else {
     output$pred_L=tmp$pred_L
     output$pred_R=tmp$pred_R

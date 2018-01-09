@@ -59,7 +59,14 @@ doseInt(y = NULL, x = NULL, a = NULL, s = NULL, propensity = NULL,
 This function is the wrapper of fitting functions for doseInt
 }
 \examples{
-
-
-
+train1=Scenario2.continuous(2000,50,1)
+test1=Scenario2.continuous(10000,50,1)
+fit=doseInt(train=train1,
+            alpha=c(0.5,0.5),type='PDI',
+            family='continuous',
+            two.sided=FALSE,
+            method=c('rq','svmRadial'),
+            maxiter=20,step=1,trace=3,lower=TRUE,lambda=0.000001,
+            K=10,global=F,margin=0)
+pred=predict(fit,test1)
 }
