@@ -38,11 +38,13 @@
 #' @export
 #'
 
+
 doseInt<-function(y=NULL,x=NULL,a=NULL,s=NULL,propensity=NULL,train=NULL,
                   alpha=c(0.5,0.5),type='PDI',
                   family=c('continuous','ordinal','as.ordinal'),
                   two.sided=FALSE,
                   method=c('rq','svmLinear','svmRadial','RLT','tree'),
+                  pred0=NULL,
                   maxiter=20,step=1,trace=0,lower=TRUE,lambda=NULL,cost=1,embed.mtry = 1/2,
                   K=10,global=F,margin=0,breaks='quantile',
                   ...){
@@ -61,11 +63,11 @@ doseInt<-function(y=NULL,x=NULL,a=NULL,s=NULL,propensity=NULL,train=NULL,
   if (family=='continuous'){
     for (m in seq_along(method)){
       if (!two.sided){
-        output[[length(output)+1]]=DCDI1(train,alpha,method=method[m],type=type,
+        output[[length(output)+1]]=DCDI1(train,alpha,method=method[m],type=type,pred0=pred0,
                                          maxiter=maxiter,step=step,trace=trace,lower=lower,lambda=lambda,cost=cost,embed.mtry=embed.mtry)
 
       } else{
-        output[[length(output)+1]]=DCDI2(train,alpha,method=method[m],type=type,
+        output[[length(output)+1]]=DCDI2(train,alpha,method=method[m],type=type,pred0=pred0,
                                          maxiter=maxiter,step=step,trace=trace,lambda=lambda,cost=cost,embed.mtry=embed.mtry)
       }
     }

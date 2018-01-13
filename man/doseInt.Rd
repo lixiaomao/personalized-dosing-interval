@@ -7,9 +7,9 @@
 doseInt(y = NULL, x = NULL, a = NULL, s = NULL, propensity = NULL,
   train = NULL, alpha = c(0.5, 0.5), type = "PDI",
   family = c("continuous", "ordinal", "as.ordinal"), two.sided = FALSE,
-  method = c("rq", "svmLinear", "svmRadial", "RLT", "tree"), maxiter = 20,
-  step = 1, trace = 0, lower = TRUE, lambda = NULL, cost = 1,
-  embed.mtry = 1/2, K = 10, global = F, margin = 0,
+  method = c("rq", "svmLinear", "svmRadial", "RLT", "tree"), pred0 = NULL,
+  maxiter = 20, step = 1, trace = 0, lower = TRUE, lambda = NULL,
+  cost = 1, embed.mtry = 1/2, K = 10, global = F, margin = 0,
   breaks = "quantile", ...)
 }
 \arguments{
@@ -24,6 +24,8 @@ doseInt(y = NULL, x = NULL, a = NULL, s = NULL, propensity = NULL,
 \item{two.sided}{indicator of whether two-sided interval is considered.}
 
 \item{method}{specified methods used for DC and ordinal approaches.}
+
+\item{pred0}{the initial prediction for training data set, if NULL, default initialization is used}
 
 \item{maxiter}{maximal iterations for DC algorithm}
 
@@ -42,8 +44,6 @@ doseInt(y = NULL, x = NULL, a = NULL, s = NULL, propensity = NULL,
 \item{breaks}{ways 'as.ordinal' cuts continuous treatment into several ordinal levels, default 'quantile'. User can also choose 'uniform' or specify customized breaks}
 
 \item{test}{the testing data set. If test is NULL, use train as test.}
-
-\item{pred0}{the initial prediction for training data set, if NULL, default initialization is used}
 
 \item{nfolds}{the number of folds used in cross-validation.}
 

@@ -1,5 +1,5 @@
 
-initiate.continuous<-function(train,test=NULL,side,gamma=0.00001,...){
+initiate.continuous<-function(train,test=NULL,side,lambda=0.1,...){
   if (is.null(test)) test=train
   n=length(train$A)
   mytrain=cbind(train$Y,train$A,train$X,1:length(train$A))
@@ -10,15 +10,15 @@ initiate.continuous<-function(train,test=NULL,side,gamma=0.00001,...){
   if (side==1){
     index1=(train$Y<quantile(train$Y,min(sum(train$Y<train$S)/n+0.15,1)))&(train$Y>(quantile(train$Y,max(sum(train$Y<train$S)/n-0.15,0))))
     id2=mytrain$id[index1][(train$A[index1]>quantile(train$A[index1],0.35))&(train$A[index1]<quantile(train$A[index1],0.95))]
-    lmfit=rq(A~.,data=mytrain[id2,c("A",paste("X",1:dim(train$X)[2],sep=""))])
+    lmfit=rq(A~.,data=mytrain[id2,c("A",paste("X",1:dim(train$X)[2],sep=""))],method="lasso",lambda=lambda)
     pred=predict(lmfit,mytest)
     return(list(fit=lmfit,pred=pred))
   } else if (side==2){
     index1=(train$Y<quantile(train$Y,min(sum(train$Y<train$S)/n+0.15,1)))&(train$Y>(quantile(train$Y,max(sum(train$Y<train$S)/n-0.15,0))))
     id1=mytrain$id[index1][(train$A[index1]>quantile(train$A[index1],0.05))&(train$A[index1]<quantile(train$A[index1],0.45))]
     id2=mytrain$id[index1][(train$A[index1]>quantile(train$A[index1],0.55))&(train$A[index1]<quantile(train$A[index1],0.95))]
-    model1=rq(A~.,data=mytrain[id1,!colnames(mytrain)%in%c('Y','id')],method='lasso',lambda=gamma)
-    model2=rq(A~.,data=mytrain[id2,!colnames(mytrain)%in%c('Y','id')],method='lasso',lambda=gamma)
+    model1=rq(A~.,data=mytrain[id1,!colnames(mytrain)%in%c('Y','id')],method='lasso',lambda=lambda)
+    model2=rq(A~.,data=mytrain[id2,!colnames(mytrain)%in%c('Y','id')],method='lasso',lambda=lambda)
     h1=predict(model1,mytest)
     h2=predict(model2,mytest)
     fit=list(fit_L=model1,fit_R=model2)
@@ -26,7 +26,7 @@ initiate.continuous<-function(train,test=NULL,side,gamma=0.00001,...){
   }
 }
 
-initiate.binary<-function(train,test=NULL,side,gamma=0.00001,...){
+initiate.binary<-function(train,test=NULL,side,lambda=0.1,...){
   if (is.null(test)) test=train
   n=length(train$A)
   mytrain=as.data.frame(cbind(train$A,train$X))
@@ -35,14 +35,14 @@ initiate.binary<-function(train,test=NULL,side,gamma=0.00001,...){
   colnames(mytest)=c(paste("X",1:dim(test$X)[2],sep=""))
   if (side==1){
     index=(train$A<quantile(train$A,0.65))&(train$A>quantile(train$A,0.35))
-    lmfit=rq(A~.,data=mytrain[index,])
+    lmfit=rq(A~.,data=mytrain[index,],method="lasso",lambda=lambda)
     pred=predict(lmfit,mytest)
     return(list(pred_test=pred,fit=lmfit))
   } else if (side==2){
     id1=(mytrain$A>quantile(mytrain$A,0.2))&(mytrain$A<quantile(mytrain$A,0.35))
     id2=(mytrain$A>quantile(mytrain$A,0.55))&(mytrain$A<quantile(mytrain$A,0.7))
-    model1=rq(A~.,data=mytrain[id1,],method="lasso",lambda=gamma)
-    model2=rq(A~.,data=mytrain[id2,],method="lasso",lambda=gamma)
+    model1=rq(A~.,data=mytrain[id1,],method="lasso",lambda=lambda)
+    model2=rq(A~.,data=mytrain[id2,],method="lasso",lambda=lambda)
     h1=predict(model1,mytest)
     h2=predict(model2,mytest)
     fit=list(fit_L=model1,fit_R=model2)
@@ -75,8 +75,8 @@ fit.rlt.model<-function(train,weights,...){
     cat(paste0('influntial sample:',length(train$A[nzero]),' parameters to estimate:',p+1))
     return(NA);
   }
-  RLT.fit = RLT(x=as.matrix(train$X[nzero,]), y=train$A[nzero], model = "regression", use.cores = 2, ntrees = 200, split.gen = "random", 
-                nsplit = 1, resample.prob = 1, track.obs = FALSE, importance = TRUE, 
+  RLT.fit = RLT(x=as.matrix(train$X[nzero,]), y=train$A[nzero], model = "regression", use.cores = 2, ntrees = 200, split.gen = "random",
+                nsplit = 1, resample.prob = 1, track.obs = FALSE, importance = TRUE,
                 replacement = TRUE, reinforcement = TRUE, combsplit = 5, embed.ntrees = 25,
                 muting = -1, muting.percent = 0.9, embed.mtry = 2/3, subject.weight=weights[nzero])
   return(RLT.fit)
