@@ -48,16 +48,7 @@ DCDI1(train, alpha, method = "rq", type = "PDI", pred0 = NULL,
 This function is the wrapper of fitting functions for doseInt
 }
 \examples{
-  train1=Scenario1.continuous(1000,5,1)
-  test1=Scenario1.continuous(10000,5,1)
-  fit1=DCDI1(train1,alpha=c(0.5,0.5),method='rq',trace=3)
-  predNew1=predict(fit1,test1)
-  cor(predNew1$pred,test1$opt)^2
 
-  train3=Scenario3.continuous(2000,5,3)
-  test3=Scenario3.continuous(10000,5,3)
-  fit3=DCDI2(train3,alpha=c(0.5,0.5),method='rq',trace=3)
-  predNew3=predict(fit3,test3)
-  cor(predNew3$pred_L,test3$opt_L)^2
-  cor(predNew3$pred_R,test3$opt_R)^2
+
+
 }
