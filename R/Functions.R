@@ -1,10 +1,10 @@
-constructData<-function(y,x,a,s,propensity=NULL,K=20){
+constructData<-function(y,x,a,s,propensity=NULL,K=20,Extra=NULL){
   Data=list()
   Data$X=as.matrix(x)
   Data$Y=drop(y)
   Data$A=matrix(a,ncol=1)
   Data$S=s
-  
+
   if (is.null(propensity)) {
     if (length(unique(a))>20){
       grid=seq(min(a),max(a),length.out = K)
@@ -12,16 +12,21 @@ constructData<-function(y,x,a,s,propensity=NULL,K=20){
       a=cut(a,breaks=grid)
     } else{
       a=as.character(a)
-    } 
+    }
     dat=as.data.frame(cbind(a,x))
     names(dat)=c('a',paste0('x',1:dim(x)[2]))
     glmfit=nnet::multinom(a~.,data=dat)
     propensity=rep(0,length(a))
     for (i in seq_along(propensity)){
-      propensity[i]=1/glmfit$fitted.values[i,a[i]]
+      propensity[i]=1/(glmfit$fitted.values[i,a[i]]+0.01)
     }
   }
-  Data$propensity=propensity/mean(propensity)
+  Data$propensity=propensity#/mean(propensity)
+  if (!is.null(Extra)){
+    for (i in seq_along(Extra)){
+      Data[names(Extra)[i]]=Extra[i]
+    }
+  }
   return(Data)
 }
 subsetData<-function(Data,index){
@@ -45,7 +50,7 @@ subsetData<-function(Data,index){
 plot.FDI<-function(Data,pos,size=1,main=NULL,saving=FALSE,...){
   if (saving){
     jpeg(filename = paste0(main,".jpg"),width = 700, height = 700, quality = 99)
-  } 
+  }
   Dat1=data.frame(treatment=jitter(Data$A[which(!pos==1)]),response=jitter(Data$Y[which(!pos==1)]),label_pred=rep('in',sum(!pos==1)))
   Dat2=data.frame(treatment=jitter(Data$A[which(pos==1)]),response=jitter(Data$Y[which(pos==1)]),label_pred=rep('out',sum(pos==1)))
   Dat=rbind(Dat1,Dat2)
@@ -61,7 +66,7 @@ plot.FDI<-function(Data,pos,size=1,main=NULL,saving=FALSE,...){
 }
 
 valueInterval<-function(x,region,type=c('mean','median','var','misclass','mse')){
-  
+
 }
 
 
@@ -155,7 +160,7 @@ predict_indirect=function(fitted,test,two.sided,dt=0.01,left=NA,right=NA,type='P
     }
   }
   percentage=sum(region*(test$Y>test$S))/sum(region)
-  
+
   output=list(pred=pred_L,pred_L=pred_L,pred_R=pred_R,found=found,region=region,misclass=misclass,correlation=correlation,Rsquare=Rsquare,percentage=percentage)
   return(output)
 }

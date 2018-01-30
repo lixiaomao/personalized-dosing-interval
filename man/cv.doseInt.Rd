@@ -8,7 +8,7 @@ cv.doseInt(train, test = NULL, pred0 = NULL, nfolds = 5, alpha = c(0.5,
   0.5), type = "PDI", two.sided = FALSE, family = c("continuous",
   "ordinal", "as.ordinal"), method = c("rq", "svmLinear", "svmRadial", "RLT",
   "tree"), maxiter = 20, step = 1, trace = 0, lower = TRUE, K = 10,
-  global = F, margin = 0, breaks = "quantile", Eps = c(0.1, 0.2, 0.3),
+  global = F, margin = 0, breaks = "quantile", Eps = NULL,
   Lambda = c(2^(-(0:10)), 1e-08), Cost = c(1e-05, 0.001, 0.1, seq(1, 15,
   2)), Embed.mtry = c(0.2, 0.3, 0.4, 0.5), ...)
 }
@@ -59,7 +59,31 @@ cv.doseInt(train, test = NULL, pred0 = NULL, nfolds = 5, alpha = c(0.5,
 This function is the wrapper of cross-validation for doseInt
 }
 \examples{
+train1=Scenario1.continuous(2000,5,1)
+test1=Scenario1.continuous(10000,5,1)
+
+cv1=cv.doseInt(train1,test1,pred0=NULL,nfolds=2,alpha=c(0.5,0.5),type='PDI',two.sided=FALSE,
+               family='continuous',
+               method='svmLinear',
+               maxiter=20,step=1,trace=0,lower=TRUE,Lambda = 2^(-(1:5)),Cost=c(1,7,12,19))
+pred1=predict(cv1$fit,test1)
+
+train2=Scenario2.continuous(2000,6,2)
+test2=Scenario2.continuous(10000,6,2)
+
+cv2=cv.doseInt(train2,test2,pred0=NULL,nfolds=2,alpha=c(0.5,0.5),type='PDI',two.sided=FALSE,
+               family='as.ordinal',
+               method='svmLinear',K=20,
+               maxiter=2,step=1,trace=3,lower=TRUE,Lambda = 2^(-(1:5)),Cost=c(0.0001,0.001,0.01,0.01,0.05,0.1,0.5,1))
+pred2=predict(cv2$fit,test2)
 
 
+train4=Scenario4.continuous(2000,5,4)
+test4=Scenario4.continuous(10000,5,4)
 
+cv4=cv.doseInt(train4,test4,pred0=NULL,nfolds=2,alpha=c(0.5,0.5),type='PDI',two.sided=TRUE,
+               family='as.ordinal',
+               method='svmLinear',K=20,
+              maxiter=2,step=1,trace=3,lower=TRUE,Lambda = 2^(-(1:5)),Cost=c(0.0001,0.001,0.01,0.01,0.05,0.1,0.5,1))
+pred4=predict(cv4$fit,test4)
 }

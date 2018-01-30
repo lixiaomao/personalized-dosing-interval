@@ -1,7 +1,7 @@
 #' Fits dose interval
 #'
 #' This function is the wrapper of fitting functions for doseInt
-#' 
+#'
 #' @param train the training data set.
 #' @param test the testing data set. If test is NULL, use train as test.
 #' @param pred0 the initial prediction for training data set, if NULL, default initialization is used
@@ -23,18 +23,29 @@
 #' @param Lambda  penalty for the quantile regression
 #' @param Cost  cost for the support vector machine
 #' @param Embed.mtry  proportion of mtry
-#'    
+#'
 #' @examples
-#' 
-#' 
-#' 
+#' train1=Scenario2.continuous(2000,50,1)
+#' test1=Scenario2.continuous(10000,50,1)
+#' fit=doseInt(train=train1,
+#'             alpha=c(0.5,0.5),type='PDI',
+#'             family='continuous',
+#'             two.sided=FALSE,
+#'             method=c('rq','svmRadial'),
+#'             maxiter=20,step=1,trace=3,lower=TRUE,lambda=0.000001,
+#'             K=10,global=F,margin=0)
+#' pred=predict(fit,test1)
+#' @export
+#'
+
 
 doseInt<-function(y=NULL,x=NULL,a=NULL,s=NULL,propensity=NULL,train=NULL,
                   alpha=c(0.5,0.5),type='PDI',
                   family=c('continuous','ordinal','as.ordinal'),
                   two.sided=FALSE,
                   method=c('rq','svmLinear','svmRadial','RLT','tree'),
-                  maxiter=20,step=1,trace=0,lower=TRUE,lambda=NULL,cost=1,embed.mtry = 1/2,
+                  pred0=NULL,
+                  maxiter=20,step=1,trace=0,lower=TRUE,lambda=NULL,cost=1,embed.mtry = 1/3,
                   K=10,global=F,margin=0,breaks='quantile',
                   ...){
   if (!is.null(family)){
@@ -45,21 +56,19 @@ doseInt<-function(y=NULL,x=NULL,a=NULL,s=NULL,propensity=NULL,train=NULL,
     family='ordinal'
   }
   if (is.null(train)) train=constructData(y,x,a,s,propensity)
-  
   output=list()
   if (!is.null(method)) method=match.arg(method,several.ok = T)
-  
+
   if (family=='continuous'){
     for (m in seq_along(method)){
       if (!two.sided){
-        output[[length(output)+1]]=DCDI1(train,alpha,method=method[m],type=type,
+        output[[length(output)+1]]=DCDI1(train,alpha,method=method[m],type=type,pred0=pred0,
                                          maxiter=maxiter,step=step,trace=trace,lower=lower,lambda=lambda,cost=cost,embed.mtry=embed.mtry)
-        
+
       } else{
-        output[[length(output)+1]]=DCDI2(train,alpha,method=method[m],type=type,
+        output[[length(output)+1]]=DCDI2(train,alpha,method=method[m],type=type,pred0=pred0,
                                          maxiter=maxiter,step=step,trace=trace,lambda=lambda,cost=cost,embed.mtry=embed.mtry)
       }
-      names(output)[length(output)]=method[m]
     }
   } else if (family=='ordinal'|family=='as.ordinal'){
     if (is.null(method)) method='svmRadial'
@@ -71,9 +80,9 @@ doseInt<-function(y=NULL,x=NULL,a=NULL,s=NULL,propensity=NULL,train=NULL,
       if (family=='as.ordinal') continuous=TRUE else continuous=FALSE
       output[[length(output)+1]]=ordinalDI(train,type=type,continuous=continuous,two.sided=two.sided,lower=lower,
                                            K=K,cost=cost,global=global,margin=margin,alpha=alpha,breaks=breaks,method=method[m])
-      names(output)[length(output)]=method[m]
     }
   }
+  names(output)=method
   class(output)='doseInt'
   return(output)
 }
@@ -81,5 +90,6 @@ doseInt<-function(y=NULL,x=NULL,a=NULL,s=NULL,propensity=NULL,train=NULL,
 predict.doseInt<-function(x,test){
   lst=list()
   for (i in seq_along(x)) lst[[i]]=predict(x[[i]],test)
+  names(lst)=names(x)
   return(lst)
 }

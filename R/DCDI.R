@@ -1,7 +1,8 @@
+
 #' Fits dose interval using DC-algorithm
 #'
 #' This function is the wrapper of fitting functions for doseInt
-#' 
+#'
 #' @param train the training data set.
 #' @param pred0 the initial prediction for training data set, if NULL, default initialization is used
 #' @param nfolds the number of folds used in cross-validation.
@@ -19,23 +20,32 @@
 #' @param Lambda  penalty for the quantile regression
 #' @param Cost  cost for the support vector machine
 #' @param Embed.mtry  proportion of mtry
-#'    
+#'
 #' @examples
-#' 
-#' 
-#' 
-
-
+#'   train1=Scenario1.continuous(1000,5,1)
+#'   test1=Scenario1.continuous(10000,5,1)
+#'   fit1=DCDI1(train1,alpha=c(0.5,0.5),method='rq',trace=3)
+#'   predNew1=predict(fit1,test1)
+#'   cor(predNew1$pred,test1$opt)^2
+#'
+#'   train3=Scenario3.continuous(2000,5,3)
+#'   test3=Scenario3.continuous(10000,5,3)
+#'   fit3=DCDI2(train3,alpha=c(0.5,0.5),method='rq',trace=3)
+#'   predNew3=predict(fit3,test3)
+#'   cor(predNew3$pred_L,test3$opt_L)^2
+#'   cor(predNew3$pred_R,test3$opt_R)^2
+#' @export
+#'
 DCDI1<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
                 maxiter=20,step=1,trace=0,lower=TRUE, eps=NULL,aL=NULL,aU=NULL,
                 lambda=0.0000001,cost=1,embed.mtry = 1/2,svmKernel=NULL,...){
   n=length(train$A)
   fit.method=switch(method,'rq'=fit.rq.model,'svmLinear'=fit.svmL.model,'svmRadial'=fit.svmK.model,'RLT'=fit.rlt.model)
-  
+
   para=list(...)
   if (is.null(aL))  aL<-min(train$A)-0.5*sd(train$A)
   if (is.null(aU))  aU<-max(train$A)+0.5*sd(train$A)
-  if (is.null(eps)) eps<-para$eps else eps=0.1*(aU-aL)
+  if (is.null(eps)) eps=0.1*(aU-aL)
   if (is.null(pred0)){
     if (length(table(train$A))>4){
       pred0=initiate.continuous(train,train,side=1)
@@ -45,15 +55,15 @@ DCDI1<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
   }
   pred=pred0$pred
   predOld=pred
-  
+
   W1=((pred-train$A)<eps)&((pred-train$A)>0)
   W2=((train$A-pred)<eps)&((train$A-pred)>0)
   id=which(W1|W2)
-  
+
   indexOld1=which(W1)
   indexOld2=which(W2)
   indexNew1<-NULL->indexNew2
-  
+
   region=(train$A>predOld)
   if (type=="EDI"){
     if (lower){
@@ -71,7 +81,7 @@ DCDI1<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
   if (trace) cat('Initial Error:',misclass0,'\n')
   misclass_old=misclass0
   misclass=misclass_old
-  
+
   fit.model_old=pred0$fit
   fit.model=NA
   i=1
@@ -93,7 +103,7 @@ DCDI1<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
     if (trace) cat('Percentage used: ',sum(weights>0),'(',round(mean(weights>0)*100),'%) \n')
     if (trace) print(quantile(train$A[weights!=0]))
     fit.model=fit.method(train,weights=weights,eps=eps,lambda=lambda,cost=cost,embed.mtry = embed.mtry, pred=predOld,side="left")
-    
+
     if (isTRUE(all.equal(fit.model,NA))){
       cat("Fitting failed at interation: ",i,'\n')
       break;
@@ -101,13 +111,13 @@ DCDI1<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
     pred=predict.owl(fit.model,train)
     pred=step*as.vector(pred)+(1-step)*as.vector(predOld)
     predOld=pred
-    
+
     W1=((pred-train$A)<eps)&((pred-train$A)>0)
     W2=((train$A-pred)<eps)&((train$A-pred)>0)
-    
+
     indexNew1=which(W1)
     indexNew2=which(W2)
-    
+
     region=pred<train$A
     if (type=="EDI"){
       if (lower){
@@ -127,7 +137,7 @@ DCDI1<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
       cat("Fitting led to larger Error, stopped at interation: ",i,'\n')
       break
     }
-    
+
     if (trace>2){
       plot(train$Y~train$A,main=paste("iteration:",i),cex=1.5,pch=21)
       points(train$Y[region]~train$A[region],col="red",bg='red2',pch=21,cex=1.5)
@@ -136,7 +146,7 @@ DCDI1<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
       points(train$Y[W2]~train$A[W2],col="green",cex=1.5,pch=21)
       Sys.sleep(0.5)
     }
-    
+
     if (identical(indexOld1,indexNew1)&identical(indexOld2,indexOld2)){
       if (trace) print(paste("Converge after",i,"steps"))
       break
@@ -156,7 +166,8 @@ predict.DCDI1<-function(obj,test){
   lower=obj$lower
   type=obj$type
   n1=dim(test$X)[1]
-  
+  pred0=obj$pred0
+
   misclass<-NULL->region->pred
   if (isTRUE(all.equal(fit.model,NA))){
     fit.model=pred0$fit
@@ -181,20 +192,21 @@ predict.DCDI1<-function(obj,test){
         }
       }
     }
-  } 
+  }
   return(list(misclass=misclass,region=region,pred=pred))
 }
+
 
 DCDI2<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
                 maxiter=20,step=1,trace=0, eps=NULL,aL=NULL,aU=NULL,
                 lambda=0.0000001,cost=1,embed.mtry = 1/2,svmKernel=NULL,...){
   n=length(train$A)
   fit.method=switch(method,'rq'=fit.rq.model,'svmLinear'=fit.svmL.model,'svmRadial'=fit.svmK.model,'RLT'=fit.rlt.model)
-  
+
   para=list(...)
-  if (is.null(aL)) aL<-para$aL else aL<-min(train$A)-0.5*sd(train$A)
-  if (is.null(aU)) aU<-para$aU else aU<-max(train$A)+0.5*sd(train$A)
-  if (is.null(eps)) eps<-para$eps else eps=0.1*(aU-aL)
+  if (is.null(aL))  aL<-min(train$A)-0.5*sd(train$A)
+  if (is.null(aU))  aU<-max(train$A)+0.5*sd(train$A)
+  if (is.null(eps))  eps=0.1*(aU-aL)
   if (is.null(pred0)){
     if (length(table(train$A)>4)){
       pred0=initiate.continuous(train,train,side=2)
@@ -202,19 +214,19 @@ DCDI2<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
       pred0=initiate.binary(train,train,side=2)
     }
   }
-  
+
   pred_L=pred0$pred_L
   pred_R=pred0$pred_R
   predOld_L=pred_L
   predOld_R=pred_R
-  
+
   W1_L=((pred_L-train$A)<eps)&((pred_L-train$A)>(0))
   W2_L=((train$A-pred_L)<eps)&((train$A-pred_L)>(0))
   id_L=which(W1_L|W2_L)
   W1_R=((pred_R-train$A)<eps)&((pred_R-train$A)>(0))
   W2_R=((train$A-pred_R)<eps)&((train$A-pred_R)>(0))
   id_R=which(W1_R|W2_R)
-  
+
   region=(train$A>pred_L)&(train$A<pred_R)
   if (type=="EDI"){
     misclass0=(alpha[1]*sum(region*pmax((train$S-train$Y),0))+alpha[2]*sum((!region)*pmax((train$Y-train$S),0)))/n
@@ -224,14 +236,14 @@ DCDI2<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
   if (trace) cat('Initial Error:',misclass0,'\n')
   misclass_old=misclass0
   misclass=misclass_old
-  
-  indexOld1_L=which(W1_L); 
+
+  indexOld1_L=which(W1_L);
   indexOld2_L=which(W2_L)
   indexNew1_L<-NULL->indexNew2_L
-  indexOld1_R=which(W1_R); 
+  indexOld1_R=which(W1_R);
   indexOld2_R=which(W2_R)
   indexNew1_R<-NULL->indexNew2_R
-  
+
   fit.model_L_old=pred0$fit$fit_L
   fit.model_R_old=pred0$fit$fit_R
   fit.model_L<-NA->fit.model_R
@@ -241,15 +253,12 @@ DCDI2<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
     if (trace) cat("\nIteration:",i,'\n')
     if (type=="EDI"){
       weights_L=train$propensity*(alpha[2]*W1_L*pmax((train$Y-train$S),0)+alpha[1]*W2_L*pmax((train$S-train$Y),0))
-    } else if(type=="PDI"){
-      weights_L=train$propensity*(alpha[2]*W1_L*(train$Y>train$S)+alpha[1]*W2_L*(train$S>train$Y))
-    }
-    if (type=="EDI"){
       weights_R=train$propensity*(alpha[2]*W2_R*pmax((train$Y-train$S),0)+alpha[1]*W1_R*pmax((train$S-train$Y),0))
     } else if(type=="PDI"){
+      weights_L=train$propensity*(alpha[2]*W1_L*(train$Y>train$S)+alpha[1]*W2_L*(train$S>train$Y))
       weights_R=train$propensity*(alpha[2]*W2_R*(train$Y>train$S)+alpha[1]*W1_R*(train$S>train$Y))
     }
-    
+
     if (flag_L){
       index_L=(train$A<pred_R)
       weights_L=weights_L[index_L]
@@ -264,7 +273,7 @@ DCDI2<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
         pred_L=step*as.vector(pred_L)+(1-step)*as.vector(predOld_L)
       }
     }
-    
+
     if (flag_R){
       index_R=(train$A>pred_L)
       weights_R=weights_R[index_R]
@@ -279,7 +288,7 @@ DCDI2<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
         pred_R=step*as.vector(pred_R)+(1-step)*as.vector(predOld_R)
       }
     }
-    
+
     if (!(flag_L|flag_R)){
       print(paste("Both fitting failed at iteration:",i))
       break;
@@ -292,14 +301,14 @@ DCDI2<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
     W2_R=((train$A-pred_R)<eps)&((train$A-pred_R)>0)
     indexNew1_R=which(W1_R)
     indexNew2_R=which(W2_R)
-    
+
     region=(train$A>pred_L)&(train$A<pred_R)
     if (type=="EDI"){
       misclass=(alpha[1]*sum(region*pmax((train$S-train$Y),0))+alpha[2]*sum((!region)*pmax((train$Y-train$S),0)))/n
     } else if (type=="PDI"){
       misclass=(alpha[1]*sum(region*(train$Y<train$S))+alpha[2]*sum((!region)*(train$Y>train$S)))/n
     }
-    
+
     if (misclass>misclass_old*1.2){
       cat("Fitting led to larger Error, stopped at interation:",i,'\n')
       pred_L=predOld_L
@@ -333,7 +342,7 @@ DCDI2<-function(train,alpha,method='rq',type='PDI',pred0=NULL,
     indexOld1_R=indexNew1_R
     indexOld2_R=indexNew2_R
   } # end of iterations
-  
+
   if (trace) print(paste("Iteration stopped:",i))
   if (isTRUE(all.equal(fit.model_L,NA))){
     if (trace) cat("No improvement: left boundary \n")
@@ -353,7 +362,7 @@ predict.DCDI2<-function(obj,test){
   lower=obj$lower
   n1=dim(test$X)[1]
   type=obj$type
-  pred
+  pred0=obj$pred0
   region<-NULL->misclass->pred_R->pred_L
   if (isTRUE(all.equal(fit.model_L,NA))){
     fit.model_L=pred0$fit$fit_L
@@ -368,7 +377,7 @@ predict.DCDI2<-function(obj,test){
     pred_R=predict.owl(fit.model_R,test)
   }
   if (!is.null(test$A)){
-    region=(test$A>pred_L)&(test$A<pred_test_R)
+    region=(test$A>pred_L)&(test$A<pred_R)
     if ((!is.null(test$Y))&(!is.null(test$S))){
       if (type=="EDI"){
         misclass=(alpha[1]*sum((region)*pmax((test$S-test$Y),0))+alpha[2]*sum((!region)*pmax((test$Y-test$S),0)))/n1
