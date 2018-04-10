@@ -5,17 +5,15 @@
 \title{Fits dose interval}
 \usage{
 doseInt(y = NULL, x = NULL, a = NULL, s = NULL, propensity = NULL,
-  train = NULL, alpha = c(0.5, 0.5), type = "PDI",
-  family = c("continuous", "ordinal", "as.ordinal"), two.sided = FALSE,
-  method = c("rq", "svmLinear", "svmRadial", "RLT", "tree"), pred0 = NULL,
-  maxiter = 20, step = 1, trace = 0, lower = TRUE, lambda = NULL,
-  cost = 1, embed.mtry = 1/3, K = 10, global = F, margin = 0,
-  breaks = "quantile", ...)
+  train = NULL, type = "PDI", eps = NULL, family = c("continuous",
+  "ordinal", "as.ordinal"), two.sided = FALSE, method = c("rq", "svmLinear",
+  "svmRadial", "RLT", "tree", "completeLinear", "completeKernel"),
+  pred0 = NULL, maxiter = 20, step = 1, trace = 0, lower = TRUE,
+  lambda = NULL, cost = 1, embed.mtry = 1/3, K = 10, global = F,
+  margin = 0, breaks = "quantile", ...)
 }
 \arguments{
 \item{train}{the training data set.}
-
-\item{alpha}{the guaranteed probability in PDI and the relative loss in EDI. Default is c(0.5,0.5).}
 
 \item{type}{indicates whether PDI or EDI is to be calculated.}
 
@@ -46,6 +44,8 @@ doseInt(y = NULL, x = NULL, a = NULL, s = NULL, propensity = NULL,
 \item{test}{the testing data set. If test is NULL, use train as test.}
 
 \item{nfolds}{the number of folds used in cross-validation.}
+
+\item{alpha}{the guaranteed probability in PDI and the relative loss in EDI. Default is c(0.5,0.5).}
 
 \item{Eps}{parameter for the relaxation}
 

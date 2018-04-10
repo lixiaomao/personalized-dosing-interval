@@ -5,8 +5,9 @@
 \title{Fits dose interval using ordinal approach}
 \usage{
 ordinalDI(train, type = "PDI", two.sided = FALSE, cost = 1, K = 10,
-  continuous = FALSE, global = F, margin = 0, alpha = c(0.5, 0.5),
-  breaks = "quantile", lower = TRUE, method = "svmLinear", ...)
+  continuous = FALSE, aL = NULL, aU = NULL, global = F, margin = 0,
+  alpha = c(0.5, 0.5), breaks = "quantile", lower = TRUE,
+  method = "svmLinear", ...)
 }
 \arguments{
 \item{train}{the training data set.}

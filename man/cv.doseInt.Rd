@@ -4,13 +4,13 @@
 \alias{cv.doseInt}
 \title{Conduct cross-validation for dose interval}
 \usage{
-cv.doseInt(train, test = NULL, pred0 = NULL, nfolds = 5, alpha = c(0.5,
-  0.5), type = "PDI", two.sided = FALSE, family = c("continuous",
-  "ordinal", "as.ordinal"), method = c("rq", "svmLinear", "svmRadial", "RLT",
-  "tree"), maxiter = 20, step = 1, trace = 0, lower = TRUE, K = 10,
-  global = F, margin = 0, breaks = "quantile", Eps = NULL,
-  Lambda = c(2^(-(0:10)), 1e-08), Cost = c(1e-05, 0.001, 0.1, seq(1, 15,
-  2)), Embed.mtry = c(0.2, 0.3, 0.4, 0.5), ...)
+cv.doseInt(train, test = NULL, pred0 = NULL, nfolds = 5, type = "PDI",
+  two.sided = FALSE, family = c("continuous", "ordinal", "as.ordinal"),
+  method = c("rq", "svmLinear", "svmRadial", "RLT", "tree", "completeLinear",
+  "completeKernel"), maxiter = 20, step = 1, trace = 0, lower = TRUE,
+  K = 10, global = F, margin = 0, breaks = "quantile", aL = NULL,
+  aU = NULL, Eps = NULL, Lambda = c(2^(-(0:10)), 1e-08), Cost = c(1e-05,
+  0.001, 0.1, seq(1, 15, 2)), Embed.mtry = c(0.2, 0.3, 0.4, 0.5), ...)
 }
 \arguments{
 \item{train}{the training data set.}
@@ -20,8 +20,6 @@ cv.doseInt(train, test = NULL, pred0 = NULL, nfolds = 5, alpha = c(0.5,
 \item{pred0}{the initial prediction for training data set, if NULL, default initialization is used}
 
 \item{nfolds}{the number of folds used in cross-validation.}
-
-\item{alpha}{the guaranteed probability in PDI and the relative loss in EDI. Default is c(0.5,0.5).}
 
 \item{type}{indicates whether PDI or EDI is to be calculated.}
 

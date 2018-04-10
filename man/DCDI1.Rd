@@ -4,15 +4,13 @@
 \alias{DCDI1}
 \title{Fits dose interval using DC-algorithm}
 \usage{
-DCDI1(train, alpha, method = "rq", type = "PDI", pred0 = NULL,
-  maxiter = 20, step = 1, trace = 0, lower = TRUE, eps = NULL,
-  aL = NULL, aU = NULL, lambda = 1e-07, cost = 1, embed.mtry = 1/2,
+DCDI1(train, method = "rq", type = "PDI", pred0 = NULL, maxiter = 20,
+  step = 1, trace = 0, lower = TRUE, eps = NULL, aL = NULL,
+  aU = NULL, lambda = 1e-07, cost = 1, embed.mtry = 1/2,
   svmKernel = NULL, ...)
 }
 \arguments{
 \item{train}{the training data set.}
-
-\item{alpha}{the guaranteed probability in PDI and the relative loss in EDI. Default is c(0.5,0.5).}
 
 \item{method}{specified methods used for DC and ordinal approaches.}
 
@@ -30,9 +28,9 @@ DCDI1(train, alpha, method = "rq", type = "PDI", pred0 = NULL,
 
 \item{nfolds}{the number of folds used in cross-validation.}
 
-\item{two.sided}{indicator of whether two-sided interval is considered.}
+\item{alpha}{the guaranteed probability in PDI and the relative loss in EDI. Default is c(0.5,0.5).}
 
-\item{family}{specifis the methods. 'continuous' leads to DC-algorithm,'ordinal' handles the ordinal treatments, while 'as.ordinal' cuts continuous treatment into several ordinal levels and apply the ordinal algorithm.}
+\item{two.sided}{indicator of whether two-sided interval is considered.}
 
 \item{breaks}{ways 'as.ordinal' cuts continuous treatment into several ordinal levels, default 'quantile'. User can also choose 'uniform' or specify customized breaks}
 

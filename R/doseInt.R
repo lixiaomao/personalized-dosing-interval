@@ -40,10 +40,10 @@
 
 
 doseInt<-function(y=NULL,x=NULL,a=NULL,s=NULL,propensity=NULL,train=NULL,
-                  alpha=c(0.5,0.5),type='PDI',
+                  type='PDI', eps=NULL,
                   family=c('continuous','ordinal','as.ordinal'),
                   two.sided=FALSE,
-                  method=c('rq','svmLinear','svmRadial','RLT','tree'),
+                  method=c('rq','svmLinear','svmRadial','RLT','tree','completeLinear','completeKernel'),
                   pred0=NULL,
                   maxiter=20,step=1,trace=0,lower=TRUE,lambda=NULL,cost=1,embed.mtry = 1/3,
                   K=10,global=F,margin=0,breaks='quantile',
@@ -56,40 +56,32 @@ doseInt<-function(y=NULL,x=NULL,a=NULL,s=NULL,propensity=NULL,train=NULL,
     family='ordinal'
   }
   if (is.null(train)) train=constructData(y,x,a,s,propensity)
-  output=list()
-  if (!is.null(method)) method=match.arg(method,several.ok = T)
+  if (!is.null(method)) method=match.arg(method,several.ok = F)
 
   if (family=='continuous'){
-    for (m in seq_along(method)){
       if (!two.sided){
-        output[[length(output)+1]]=DCDI1(train,alpha,method=method[m],type=type,pred0=pred0,
-                                         maxiter=maxiter,step=step,trace=trace,lower=lower,lambda=lambda,cost=cost,embed.mtry=embed.mtry)
-
+        if (!method%in%c('completeLinear','completeKernel')){
+          output=DCDI1(train,method=method,type=type,pred0=pred0,eps=eps,maxiter=maxiter,step=step,trace=trace,lower=lower,lambda=lambda,cost=cost,embed.mtry=embed.mtry)
+        } else {
+          output=RDCDI1(train,type=type,method=method,pred0=pred0$pred,maxiter=maxiter,lower=lower,eps=eps,lambda=lambda)
+        }
       } else{
-        output[[length(output)+1]]=DCDI2(train,alpha,method=method[m],type=type,pred0=pred0,
-                                         maxiter=maxiter,step=step,trace=trace,lambda=lambda,cost=cost,embed.mtry=embed.mtry)
+        if (!method%in%c('completeLinear','completeKernel')){
+          output=DCDI2(train,method=method,type=type,pred0=pred0,eps=eps,maxiter=maxiter,step=step,trace=trace,lambda=lambda,cost=cost,embed.mtry=embed.mtry)
+        } else {
+          output=RDCDI2(train,type=type,method=method,pred0L=pred0$pred_L,pred0R=pred0$pred_R,maxiter=maxiter,eps=eps,lambda=lambda)
+        }
       }
-    }
   } else if (family=='ordinal'|family=='as.ordinal'){
     if (is.null(method)) method='svmRadial'
-    for (m in seq_along(method)){
-      if (!method[m]%in%c('svmLinear','svmRadial')){
-        cat('Not able to use ',method[m],' for ordinal treatment\n')
+      if (!method%in%c('svmLinear','svmRadial')){
+        cat('Not able to use ',method,' for ordinal treatment\n')
         next
       }
       if (family=='as.ordinal') continuous=TRUE else continuous=FALSE
-      output[[length(output)+1]]=ordinalDI(train,type=type,continuous=continuous,two.sided=two.sided,lower=lower,
-                                           K=K,cost=cost,global=global,margin=margin,alpha=alpha,breaks=breaks,method=method[m])
-    }
+      output=ordinalDI(train,type=type,continuous=continuous,two.sided=two.sided,lower=lower,
+                  K=K,cost=cost,global=global,margin=margin,breaks=breaks,method=method)
   }
-  names(output)=method
-  class(output)='doseInt'
   return(output)
 }
 
-predict.doseInt<-function(x,test){
-  lst=list()
-  for (i in seq_along(x)) lst[[i]]=predict(x[[i]],test)
-  names(lst)=names(x)
-  return(lst)
-}

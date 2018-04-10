@@ -30,24 +30,28 @@
 #'   cor(predNew3$value_R,test3$opt_R)^2
 #'
 
-ordinalDI<-function(train,type='PDI',two.sided=FALSE,cost=1,K=10,continuous=FALSE,
+ordinalDI<-function(train,type='PDI',two.sided=FALSE,cost=1,K=10,continuous=FALSE,aL=NULL,aU=NULL,
                     global=F,margin=0,alpha=c(0.5,0.5),breaks='quantile',lower=TRUE,method='svmLinear',...){
   levels=NULL
   n=length(train$A)
+  if (is.null(aL)) aL=min(train$A)-0.5*sd(train$A)
+  if (is.null(aU)) aU=max(train$A)+0.5*sd(train$A)
   if(!is.null(train$K)) K=train$K
   if (continuous){
     if (length(breaks)>1){
-      breaks=breaks
+      K=length(breaks)-1
       for (i in 1:K) levels=c(levels,mean(breaks[i:(i+1)]))
     } else if (breaks=='uniform'){
       breaks=seq(aL,aU,length.out = K+1)
       for (i in 1:K) levels=c(levels,mean(breaks[i:(i+1)]))
+      breaks[1]=aL
+      breaks[K+1]=aU
     } else if (breaks=='quantile'){
       breaks=quantile(train$A,probs=seq(0,1,length.out = K+1))
       for (i in 1:K) levels=c(levels,mean(with(train,A[(A<breaks[i+1])&(A>=breaks[i])])))
+      breaks[1]=aL
+      breaks[K+1]=aU
     }
-    breaks[1]=aL
-    breaks[K+1]=aU
     train_breaks=cut(train$A,breaks=breaks,labels=F)
   } else{
     train_breaks=train$A
@@ -67,8 +71,21 @@ ordinalDI<-function(train,type='PDI',two.sided=FALSE,cost=1,K=10,continuous=FALS
       pos_id=train_breaks%in%c((k+1):(k+1+margin))
     }
     tmp=train$A
-    tmp[neg_id]=0
-    tmp[pos_id]=1
+    # if (k<9){
+    #   tmp[neg_id]=0
+    #   tmp[pos_id]=1
+    # } else {
+    #   tmp[neg_id]=1
+    #   tmp[pos_id]=0
+    # }
+    if (lower){
+      tmp[neg_id]=0
+      tmp[pos_id]=1
+    } else {
+      tmp[neg_id]=1
+      tmp[pos_id]=0
+    }
+
     Sub$A=rbind(Sub$A,matrix(tmp[sub_id],ncol=1))
     tmp=matrix(0,ncol=K-1,nrow=sum(sub_id))
     tmp[,k]=1

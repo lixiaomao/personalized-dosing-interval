@@ -4,7 +4,7 @@
 \alias{Scenario1.continuous}
 \title{Four scenarios for simulating dose interval data}
 \usage{
-Scenario1.continuous(size, ncov, seed)
+Scenario1.continuous(size, ncov, seed, aL = -1, aU = 1)
 }
 \arguments{
 \item{size}{the number of observations to be drawn}
